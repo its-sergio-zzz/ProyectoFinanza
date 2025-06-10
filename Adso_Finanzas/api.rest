@@ -39,8 +39,8 @@ POST http://localhost:8000/
 Content-Type: application/json
 
 {
-    "email": "juan@gmail.com",
-    "password": "1111"
+    "email": "sergioajimenez2410@gmail.com",
+    "password": "1234"
 }
 
 
