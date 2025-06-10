@@ -1,15 +1,14 @@
 import { Application, oakCors } from "./Dependencies/Dependencias.ts";
-// import { UserRouter } from "./Routes/UserRoutes.ts";
 import { CategoriaRouter } from "./Routes/CategoriasRouter.ts";
-
 import { TransaccionesRouter } from "./Routes/TransaccionRoutes.ts";
+import { LoginRouter } from "./Routes/LoginRouter.ts";
+import { UserRouter } from "./Routes/UserRouters.ts";
 
 const app = new Application();
 
 app.use(oakCors());
 
-// Registrar todos los routers
-const routers = [  TransaccionesRouter, CategoriaRouter];
+const routers = [  TransaccionesRouter, CategoriaRouter, LoginRouter, UserRouter];
 
 
 routers.forEach((router) => {

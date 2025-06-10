@@ -1,4 +1,3 @@
-import "https://deno.land/std@v0.224.0/dotenv/load.ts";
 import { create, verify, getNumericDate } from "../Dependencies/Dependencias.ts";
 import { generarKey } from "./CriptoKey.ts";
 
@@ -21,7 +20,6 @@ export const CrearToken = async (userId: string): Promise<string> => {
     }
 };
 
-// Interfaz para el payload del token
 interface TokenPayload {
     iss: string;
     sub: string;
