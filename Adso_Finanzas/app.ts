@@ -1,16 +1,20 @@
 import { Application, oakCors } from "./Dependencies/Dependencias.ts";
+// import { UserRouter } from "./Routes/UserRoutes.ts";
 
-const app =  new Application();
+import { CategoriaRouter } from "./Routes/CategoriasRouter.ts";
+
+const app = new Application();
 
 app.use(oakCors());
 
-const routers = [];
+// Registrar todos los routers
+const routers = [ CategoriaRouter];
 
-routers.forEach((router)=>{
+routers.forEach((router) => {
     app.use(router.routes());
     app.use(router.allowedMethods());
 });
 
-console.log("Servidor corriendo por el puerto 8000");
+console.log("🚀 Servidor de finanzas corriendo en el puerto 8000");
 
-app.listen({ port:8000 });
+app.listen({ port: 8000 });
