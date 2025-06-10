@@ -1,3 +1,39 @@
+
+GET http://localhost:8000/categorias
+###
+
+POST http://localhost:8000/categorias
+Content-Type: application/json
+
+{
+    "usuario_id": 1,
+    "nombre": "Transporte",
+    "tipo": "gasto"
+}
+
+
+###
+
+PUT http://localhost:8000/categorias
+Content-Type: application/json
+
+{
+    "id": 3,
+    "usuario_id": 1,
+    "nombre": "Alimentación",
+    "tipo": "ingreso"
+}
+
+###
+
+DELETE http://localhost:8000/categorias
+Content-Type: application/json
+
+{
+    "id": 2
+}
+
+=======
 ### 1. LOGIN - Obtener token de autenticación
 POST http://localhost:8000/
 Content-Type: application/json
@@ -128,3 +164,4 @@ Authorization: Bearer YOUR_TOKEN_HERE
 # 3. Los IDs de cuenta y categoría deben existir en la base de datos
 # 4. El formato de fecha debe ser YYYY-MM-DD
 # 5. El tipo solo puede ser "ingreso" o "gasto"
+
