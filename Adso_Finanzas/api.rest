@@ -1,3 +1,4 @@
+
 GET http://localhost:8000/categorias
 ###
 
@@ -31,4 +32,136 @@ Content-Type: application/json
 {
     "id": 2
 }
+
+=======
+### 1. LOGIN - Obtener token de autenticación
+POST http://localhost:8000/
+Content-Type: application/json
+
+{
+    "email": "juan@gmail.com",
+    "password": "1111"
+}
+
+
+###
+
+### 2. OBTENER TODAS LAS TRANSACCIONES (requiere token)
+GET http://localhost:8000/transacciones
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvc2VydmVyX2p3dCIsInN1YiI6IjEiLCJleHAiOjE3NDk1MTQ5Mjd9.VAN8d9ZejKskK1wYzZtSPjpxBaiAjG4KT5feYKpHqyU
+
+###
+
+### 3. CREAR NUEVA TRANSACCIÓN
+POST http://localhost:8000/transacciones
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN_HERE
+
+{
+    "cuenta_id": 1,
+    "categoria_id": 7,
+    "tipo": "gasto",
+    "monto": 50000.00,
+    "fecha": "2025-06-09",
+    "descripcion": "Almuerzo en restaurante"
+}
+
+###
+
+### 4. CREAR TRANSACCIÓN DE INGRESO
+POST http://localhost:8000/transacciones
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN_HERE
+
+{
+    "cuenta_id": 1,
+    "categoria_id": 2,
+    "tipo": "ingreso",
+    "monto": 500000.00,
+    "fecha": "2025-06-09",
+    "descripcion": "Pago proyecto freelance"
+}
+
+###
+
+### 5. ACTUALIZAR TRANSACCIÓN (reemplazar :id con ID real)
+PUT http://localhost:8000/transacciones/1
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN_HERE
+
+{
+    "cuenta_id": 1,
+    "categoria_id": 8,
+    "tipo": "gasto",
+    "monto": 75000.00,
+    "fecha": "2025-06-09",
+    "descripcion": "Transporte taxi (actualizado)"
+}
+
+###
+
+### 6. ELIMINAR TRANSACCIÓN (reemplazar :id con ID real)
+DELETE http://localhost:8000/transacciones/1
+Authorization: Bearer YOUR_TOKEN_HERE
+
+###
+
+### 7. OBTENER CUENTAS DEL USUARIO
+GET http://localhost:8000/cuentas
+Authorization: Bearer YOUR_TOKEN_HERE
+
+###
+
+### 8. OBTENER TODAS LAS CATEGORÍAS
+GET http://localhost:8000/categorias
+Authorization: Bearer YOUR_TOKEN_HERE
+
+###
+
+### 9. OBTENER SOLO CATEGORÍAS DE GASTOS
+GET http://localhost:8000/categorias?tipo=gasto
+Authorization: Bearer YOUR_TOKEN_HERE
+
+###
+
+### 10. OBTENER SOLO CATEGORÍAS DE INGRESOS
+GET http://localhost:8000/categorias?tipo=ingreso
+Authorization: Bearer YOUR_TOKEN_HERE
+
+###
+
+### 11. FILTRAR TRANSACCIONES POR FECHA
+GET http://localhost:8000/transacciones/filtrar?fecha_inicio=2025-06-01&fecha_fin=2025-06-09
+Authorization: Bearer YOUR_TOKEN_HERE
+
+###
+
+### 12. FILTRAR TRANSACCIONES POR TIPO
+GET http://localhost:8000/transacciones/filtrar?tipo=gasto
+Authorization: Bearer YOUR_TOKEN_HERE
+
+###
+
+### 13. FILTRAR TRANSACCIONES POR CATEGORÍA
+GET http://localhost:8000/transacciones/filtrar?categoria_id=7
+Authorization: Bearer YOUR_TOKEN_HERE
+
+###
+
+### 14. FILTRAR TRANSACCIONES POR CUENTA
+GET http://localhost:8000/transacciones/filtrar?cuenta_id=1
+Authorization: Bearer YOUR_TOKEN_HERE
+
+###
+
+### 15. FILTRAR TRANSACCIONES MÚLTIPLES CRITERIOS
+GET http://localhost:8000/transacciones/filtrar?fecha_inicio=2025-06-01&fecha_fin=2025-06-09&tipo=gasto&categoria_id=7
+Authorization: Bearer YOUR_TOKEN_HERE
+
+### NOTAS:
+# 1. Primero debes hacer login (ejemplo 1) para obtener el token
+# 2. Reemplaza "YOUR_TOKEN_HERE" con el token real que obtienes del login
+# 3. Los IDs de cuenta y categoría deben existir en la base de datos
+# 4. El formato de fecha debe ser YYYY-MM-DD
+# 5. El tipo solo puede ser "ingreso" o "gasto"
 
