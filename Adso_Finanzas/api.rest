@@ -4,6 +4,7 @@ GET http://localhost:8000/categorias
 
 POST http://localhost:8000/categorias
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvc2VydmVyX2p3dCIsInN1YiI6MSwiZXhwIjoxNzQ5NTY0NzM0fQ.zf19Ry3gnyBQ2ggOpOd-WI3pdFTp0LeuxfXvf0YX5WA
 
 {
     "usuario_id": 1,
@@ -48,14 +49,14 @@ Content-Type: application/json
 
 ### 2. OBTENER TODAS LAS TRANSACCIONES (requiere token)
 GET http://localhost:8000/transacciones
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvc2VydmVyX2p3dCIsInN1YiI6IjEiLCJleHAiOjE3NDk1MTQ5Mjd9.VAN8d9ZejKskK1wYzZtSPjpxBaiAjG4KT5feYKpHqyU
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvc2VydmVyX2p3dCIsInN1YiI6MSwiZXhwIjoxNzQ5NTY0NzM0fQ.zf19Ry3gnyBQ2ggOpOd-WI3pdFTp0LeuxfXvf0YX5WA
 
 ###
 
 ### 3. CREAR NUEVA TRANSACCIÓN
 POST http://localhost:8000/transacciones
 Content-Type: application/json
-Authorization: Bearer YOUR_TOKEN_HERE
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvc2VydmVyX2p3dCIsInN1YiI6MSwiZXhwIjoxNzQ5NTY0NzM0fQ.zf19Ry3gnyBQ2ggOpOd-WI3pdFTp0LeuxfXvf0YX5WA
 
 {
     "cuenta_id": 1,
@@ -71,7 +72,7 @@ Authorization: Bearer YOUR_TOKEN_HERE
 ### 4. CREAR TRANSACCIÓN DE INGRESO
 POST http://localhost:8000/transacciones
 Content-Type: application/json
-Authorization: Bearer YOUR_TOKEN_HERE
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvc2VydmVyX2p3dCIsInN1YiI6MSwiZXhwIjoxNzQ5NTY0NzM0fQ.zf19Ry3gnyBQ2ggOpOd-WI3pdFTp0LeuxfXvf0YX5WA
 
 {
     "cuenta_id": 1,
@@ -165,3 +166,20 @@ Authorization: Bearer YOUR_TOKEN_HERE
 # 4. El formato de fecha debe ser YYYY-MM-DD
 # 5. El tipo solo puede ser "ingreso" o "gasto"
 
+###
+GET http://localhost:8000/users
+
+###
+
+POST http://localhost:8000/
+Content-Type: application/json
+
+{
+    "email":"angie@gmail.com",
+    "password": "1234567"
+}
+
+###
+GET http://localhost:8000/users
+Content-Type: "application/json"
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvc2VydmVyX2p3dCIsInN1YiI6MSwiZXhwIjoxNzQ5NTY0NzM0fQ.zf19Ry3gnyBQ2ggOpOd-WI3pdFTp0LeuxfXvf0YX5WA
