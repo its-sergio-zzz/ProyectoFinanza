@@ -44,7 +44,79 @@ Content-Type: application/json
     "password": "1111"
 }
 
+### 3. OBTENER TODAS LAS CUENTAS DEL USUARIO
+GET http://localhost:8000/cuenta
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvc2VydmVyX2p3dCIsInN1YiI6MiwiZXhwIjoxNzQ5NjAzOTMxfQ.BtLb23kF7jt9ygu7FAFpJUbTEwbKx5ST6GK6wYEcqgc
+### 4. OBTENER UNA CUENTA ESPECÍFICA
+GET http://localhost:8000/cuentas/1
+Authorization: Bearer TU_TOKEN_AQUI
 
+### 5. CREAR NUEVA CUENTA - EFECTIVO
+POST http://localhost:8000/cuenta
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvc2VydmVyX2p3dCIsInN1YiI6MiwiZXhwIjoxNzQ5NjAzOTMxfQ.BtLb23kF7jt9ygu7FAFpJUbTEwbKx5ST6GK6wYEcqgc
+
+{
+    "nombre": "Alcancía Casa",
+    "tipo": "efectivo",
+    "saldo": 50000.00
+}
+
+### 6. CREAR NUEVA CUENTA - BANCARIA
+POST http://localhost:8000/cuenta
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvc2VydmVyX2p3dCIsInN1YiI6MiwiZXhwIjoxNzQ5NjAyNzkwfQ.wcYVarGsv4Ek49vT4GVhmacBJwvF3pOxYEi26KlfEgo
+
+{
+    "nombre": "Cuenta Ahorros Banco Caja Social",
+    "tipo": "bancaria",
+    "saldo": 1500000.00
+}
+
+### 7. CREAR NUEVA CUENTA - TARJETA
+POST http://localhost:8000/cuenta
+Content-Type: application/json
+Authorization: Bearer TU_TOKEN_AQUI
+
+{
+    "nombre": "Tarjeta Crédito American Express",
+    "tipo": "tarjeta",
+    "saldo": 2000000.00
+}
+
+### 8. CREAR NUEVA CUENTA - DIGITAL
+POST http://localhost:8000/cuenta
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvc2VydmVyX2p3dCIsInN1YiI6MiwiZXhwIjoxNzQ5NjAyNzkwfQ.wcYVarGsv4Ek49vT4GVhmacBJwvF3pOxYEi26KlfEgo
+
+{
+    "nombre": "PayPal Personal",
+    "tipo": "digital",
+    "saldo": 85000.00
+}
+
+### 9. ACTUALIZAR CUENTA (cambiar nombre y saldo)
+PUT http://localhost:8000/cuenta/1
+Content-Type: application/json
+Authorization: Bearer TU_TOKEN_AQUI
+
+{
+    "nombre": "Efectivo Personal Actualizado",
+    "saldo": 200000.00
+}
+
+### 10. ACTUALIZAR SOLO EL TIPO DE CUENTA
+PUT http://localhost:8000/cuenta/2
+Content-Type: application/json
+Authorization: Bearer TU_TOKEN_AQUI
+
+{
+    "tipo": "bancaria"
+}
+
+### 11. ELIMINAR CUENTA (solo si no tiene transacciones)
+DELETE http://localhost:8000/cuenta/10
+Authorization: Bearer TU_TOKEN_AQUI
 ###
 
 ### 2. OBTENER TODAS LAS TRANSACCIONES (requiere token)

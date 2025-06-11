@@ -3,13 +3,14 @@ import { CategoriaRouter } from "./Routes/CategoriasRouter.ts";
 import { TransaccionesRouter } from "./Routes/TransaccionRoutes.ts";
 import { LoginRouter } from "./Routes/LoginRouter.ts";
 import { UserRouter } from "./Routes/UserRouters.ts";
+import { CuentaRouter } from "./Routes/CuentaRouter.ts";
 
 const app = new Application();
 
 app.use(oakCors());
 
-const routers = [  TransaccionesRouter, CategoriaRouter, LoginRouter, UserRouter];
-
+// Registrar todos los routers
+const routers = [LoginRouter, UserRouter, CuentaRouter, TransaccionesRouter, CategoriaRouter];
 
 routers.forEach((router) => {
     app.use(router.routes());
@@ -17,5 +18,6 @@ routers.forEach((router) => {
 });
 
 console.log("🚀 Servidor de finanzas corriendo en el puerto 8000");
+
 
 app.listen({ port: 8000 });
