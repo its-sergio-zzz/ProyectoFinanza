@@ -11,17 +11,15 @@ import {
 
 const CuentaRouter = new Router();
 
-// Middleware de autenticación para todas las rutas
 CuentaRouter.use(authMiddleware);
 
-// CRUD completo para cuentas con prefijo /cuenta/ (singular)
-CuentaRouter.get("/cuenta", getCuentas);                    // GET /cuenta - Obtener todas las cuentas
-CuentaRouter.get("/cuenta/:id", getCuentaPorId);           // GET /cuenta/:id - Obtener cuenta específica
-CuentaRouter.post("/cuenta", postCuenta);                  // POST /cuenta - Crear nueva cuenta
-CuentaRouter.put("/cuenta/:id", putCuenta);               // PUT /cuenta/:id - Actualizar cuenta
-CuentaRouter.delete("/cuenta/:id", deleteCuenta);         // DELETE /cuenta/:id - Eliminar cuenta
+CuentaRouter.get("/cuenta", getCuentas);                    
+CuentaRouter.get("/cuenta/:id", getCuentaPorId);           
+CuentaRouter.post("/cuenta", postCuenta);                  
+CuentaRouter.put("/cuenta/:id", putCuenta);              
+CuentaRouter.delete("/cuenta/:id", deleteCuenta);         
 
-// Ruta adicional para resumen financiero
-CuentaRouter.get("/resumen-financiero", getResumenFinanciero); // GET /resumen-financiero
+
+CuentaRouter.get("/resumen-financiero", getResumenFinanciero);
 
 export { CuentaRouter };

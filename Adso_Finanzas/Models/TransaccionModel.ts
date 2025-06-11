@@ -1,8 +1,8 @@
+// Adso_Finanzas/Models/TransaccionModel.ts - CORREGIDO PARA TU BASE DE DATOS
 import { conexion } from "./Conexion.ts";
 
 interface TransaccionData {
     id?: number;
-    usuario_id: number;
     cuenta_id: number;
     categoria_id: number;
     tipo: 'ingreso' | 'gasto';
@@ -17,13 +17,12 @@ interface CuentaData {
     id: number;
     usuario_id: number;
     nombre: string;
-    tipo: string;
+    tipo_cuenta_nombre: string;
     saldo: number;
 }
 
 interface CategoriaData {
     id: number;
-    usuario_id: number;
     nombre: string;
     tipo: 'ingreso' | 'gasto';
 }
@@ -51,12 +50,11 @@ export class Transaccion {
         this._id = id;
     }
 
-    // Obtener todas las transacciones de un usuario
+    // Obtener todas las transacciones de un usuario (filtrando por sus cuentas)
     public async obtenerTransaccionesPorUsuario(usuario_id: number): Promise<TransaccionData[]> {
         const query = `
             SELECT 
                 t.id,
-                t.usuario_id,
                 t.cuenta_id,
                 c.nombre as cuenta_nombre,
                 t.categoria_id,
@@ -68,7 +66,7 @@ export class Transaccion {
             FROM transacciones t
             INNER JOIN cuentas c ON t.cuenta_id = c.id
             INNER JOIN categorias cat ON t.categoria_id = cat.id
-            WHERE t.usuario_id = ?
+            WHERE c.usuario_id = ?
             ORDER BY t.fecha DESC, t.id DESC
         `;
         
@@ -77,16 +75,28 @@ export class Transaccion {
     }
 
     // Crear una nueva transacción
-    public async crearTransaccion(transaccionData: TransaccionData): Promise<ResultadoOperacion> {
+    public async crearTransaccion(transaccionData: any): Promise<ResultadoOperacion> {
         try {
-            // Insertar la transacción
+            // Verificar que la cuenta pertenece al usuario
+            const cuentaCheck = await conexion.query(
+                `SELECT id FROM cuentas WHERE id = ? AND usuario_id = ?`,
+                [transaccionData.cuenta_id, transaccionData.usuario_id]
+            );
+
+            if (!cuentaCheck || cuentaCheck.length === 0) {
+                return {
+                    success: false,
+                    message: "La cuenta especificada no existe o no te pertenece"
+                };
+            }
+
+            // Insertar la transacción (SIN usuario_id porque no existe en la tabla)
             const insertQuery = `
-                INSERT INTO transacciones (usuario_id, cuenta_id, categoria_id, tipo, monto, fecha, descripcion)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO transacciones (cuenta_id, categoria_id, tipo, monto, fecha, descripcion)
+                VALUES (?, ?, ?, ?, ?, ?)
             `;
             
             const result = await conexion.query(insertQuery, [
-                transaccionData.usuario_id,
                 transaccionData.cuenta_id,
                 transaccionData.categoria_id,
                 transaccionData.tipo,
@@ -97,13 +107,12 @@ export class Transaccion {
 
             // Actualizar el saldo de la cuenta
             const updateSaldoQuery = transaccionData.tipo === 'ingreso' 
-                ? `UPDATE cuentas SET saldo = saldo + ? WHERE id = ? AND usuario_id = ?`
-                : `UPDATE cuentas SET saldo = saldo - ? WHERE id = ? AND usuario_id = ?`;
+                ? `UPDATE cuentas SET saldo = saldo + ? WHERE id = ?`
+                : `UPDATE cuentas SET saldo = saldo - ? WHERE id = ?`;
             
             await conexion.query(updateSaldoQuery, [
                 transaccionData.monto,
-                transaccionData.cuenta_id,
-                transaccionData.usuario_id
+                transaccionData.cuenta_id
             ]);
             
             return {
@@ -115,43 +124,46 @@ export class Transaccion {
             console.error("Error al crear transacción:", error);
             return {
                 success: false,
-                message: `Error al crear la transacción${error}`
+                message: `Error al crear la transacción: ${error}`
             };
         }
     }
 
     // Actualizar una transacción existente
-    public async actualizarTransaccion(id: number, transaccionData: TransaccionData): Promise<ResultadoOperacion> {
+    public async actualizarTransaccion(id: number, transaccionData: any): Promise<ResultadoOperacion> {
         try {
-            // Obtener la transacción anterior para revertir el saldo
-            const selectQuery = `SELECT * FROM transacciones WHERE id = ? AND usuario_id = ?`;
-            const transaccionAnterior = await conexion.query(selectQuery, [id, transaccionData.usuario_id]);
+            // Verificar que la transacción existe y pertenece al usuario (a través de la cuenta)
+            const transaccionCheck = await conexion.query(`
+                SELECT t.*, c.usuario_id 
+                FROM transacciones t 
+                INNER JOIN cuentas c ON t.cuenta_id = c.id 
+                WHERE t.id = ? AND c.usuario_id = ?
+            `, [id, transaccionData.usuario_id]);
             
-            if (!transaccionAnterior || transaccionAnterior.length === 0) {
+            if (!transaccionCheck || transaccionCheck.length === 0) {
                 return {
                     success: false,
                     message: "Transacción no encontrada"
                 };
             }
 
-            const transaccionVieja = transaccionAnterior[0] as TransaccionData;
+            const transaccionVieja = transaccionCheck[0] as any;
 
-            // Revertir el saldo de la cuenta (transacción anterior)
+            // Revertir el saldo de la cuenta anterior
             const revertSaldoQuery = transaccionVieja.tipo === 'ingreso' 
-                ? `UPDATE cuentas SET saldo = saldo - ? WHERE id = ? AND usuario_id = ?`
-                : `UPDATE cuentas SET saldo = saldo + ? WHERE id = ? AND usuario_id = ?`;
+                ? `UPDATE cuentas SET saldo = saldo - ? WHERE id = ?`
+                : `UPDATE cuentas SET saldo = saldo + ? WHERE id = ?`;
             
             await conexion.query(revertSaldoQuery, [
                 transaccionVieja.monto,
-                transaccionVieja.cuenta_id,
-                transaccionData.usuario_id
+                transaccionVieja.cuenta_id
             ]);
 
             // Actualizar la transacción
             const updateQuery = `
                 UPDATE transacciones 
                 SET cuenta_id = ?, categoria_id = ?, tipo = ?, monto = ?, fecha = ?, descripcion = ?
-                WHERE id = ? AND usuario_id = ?
+                WHERE id = ?
             `;
             
             await conexion.query(updateQuery, [
@@ -161,19 +173,17 @@ export class Transaccion {
                 transaccionData.monto,
                 transaccionData.fecha,
                 transaccionData.descripcion || null,
-                id,
-                transaccionData.usuario_id
+                id
             ]);
 
             // Aplicar el nuevo saldo
             const updateSaldoQuery = transaccionData.tipo === 'ingreso' 
-                ? `UPDATE cuentas SET saldo = saldo + ? WHERE id = ? AND usuario_id = ?`
-                : `UPDATE cuentas SET saldo = saldo - ? WHERE id = ? AND usuario_id = ?`;
+                ? `UPDATE cuentas SET saldo = saldo + ? WHERE id = ?`
+                : `UPDATE cuentas SET saldo = saldo - ? WHERE id = ?`;
             
             await conexion.query(updateSaldoQuery, [
                 transaccionData.monto,
-                transaccionData.cuenta_id,
-                transaccionData.usuario_id
+                transaccionData.cuenta_id
             ]);
             
             return {
@@ -193,32 +203,35 @@ export class Transaccion {
     public async eliminarTransaccion(id: number, usuario_id: number): Promise<ResultadoOperacion> {
         try {
             // Obtener la transacción para revertir el saldo
-            const selectQuery = `SELECT * FROM transacciones WHERE id = ? AND usuario_id = ?`;
-            const transaccion = await conexion.query(selectQuery, [id, usuario_id]);
+            const transaccionCheck = await conexion.query(`
+                SELECT t.*, c.usuario_id 
+                FROM transacciones t 
+                INNER JOIN cuentas c ON t.cuenta_id = c.id 
+                WHERE t.id = ? AND c.usuario_id = ?
+            `, [id, usuario_id]);
             
-            if (!transaccion || transaccion.length === 0) {
+            if (!transaccionCheck || transaccionCheck.length === 0) {
                 return {
                     success: false,
                     message: "Transacción no encontrada"
                 };
             }
 
-            const transaccionData = transaccion[0] as TransaccionData;
+            const transaccionData = transaccionCheck[0] as any;
 
             // Revertir el saldo de la cuenta
             const revertSaldoQuery = transaccionData.tipo === 'ingreso' 
-                ? `UPDATE cuentas SET saldo = saldo - ? WHERE id = ? AND usuario_id = ?`
-                : `UPDATE cuentas SET saldo = saldo + ? WHERE id = ? AND usuario_id = ?`;
+                ? `UPDATE cuentas SET saldo = saldo - ? WHERE id = ?`
+                : `UPDATE cuentas SET saldo = saldo + ? WHERE id = ?`;
             
             await conexion.query(revertSaldoQuery, [
                 transaccionData.monto,
-                transaccionData.cuenta_id,
-                usuario_id
+                transaccionData.cuenta_id
             ]);
 
             // Eliminar la transacción
-            const deleteQuery = `DELETE FROM transacciones WHERE id = ? AND usuario_id = ?`;
-            await conexion.query(deleteQuery, [id, usuario_id]);
+            const deleteQuery = `DELETE FROM transacciones WHERE id = ?`;
+            await conexion.query(deleteQuery, [id]);
             
             return {
                 success: true,
@@ -235,15 +248,26 @@ export class Transaccion {
 
     // Obtener cuentas de un usuario
     public async obtenerCuentasPorUsuario(usuario_id: number): Promise<CuentaData[]> {
-        const query = `SELECT * FROM cuentas WHERE usuario_id = ? ORDER BY nombre`;
+        const query = `
+            SELECT 
+                c.id,
+                c.usuario_id,
+                c.nombre,
+                tc.nombre as tipo_cuenta_nombre,
+                c.saldo
+            FROM cuentas c
+            INNER JOIN tipo_cuenta tc ON c.tipo_cuenta_id = tc.id
+            WHERE c.usuario_id = ? 
+            ORDER BY c.nombre
+        `;
         const rows = await conexion.query(query, [usuario_id]);
         return rows as CuentaData[];
     }
 
-    // Obtener categorías de un usuario
+    // Obtener categorías (GLOBALES - sin usuario_id)
     public async obtenerCategoriasPorUsuario(usuario_id: number, tipo?: 'ingreso' | 'gasto'): Promise<CategoriaData[]> {
-        let query = `SELECT * FROM categorias WHERE usuario_id = ?`;
-        const params: (number | string)[] = [usuario_id];
+        let query = `SELECT id, nombre, tipo FROM categorias WHERE 1=1`;
+        const params: string[] = [];
         
         if (tipo) {
             query += ` AND tipo = ?`;
@@ -264,7 +288,6 @@ export class Transaccion {
         let query = `
             SELECT 
                 t.id,
-                t.usuario_id,
                 t.cuenta_id,
                 c.nombre as cuenta_nombre,
                 t.categoria_id,
@@ -276,7 +299,7 @@ export class Transaccion {
             FROM transacciones t
             INNER JOIN cuentas c ON t.cuenta_id = c.id
             INNER JOIN categorias cat ON t.categoria_id = cat.id
-            WHERE t.usuario_id = ?
+            WHERE c.usuario_id = ?
         `;
         
         const params: (number | string)[] = [usuario_id];

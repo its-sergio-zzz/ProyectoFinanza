@@ -1,3 +1,4 @@
+// Adso_Finanzas/Controllers/TransaccionController.ts - CORREGIDO
 import { Transaccion } from "../Models/TransaccionModel.ts";
 import { z } from "../Dependencies/Dependencias.ts";
 import { Context } from "https://deno.land/x/oak@v17.1.3/mod.ts";
@@ -81,7 +82,7 @@ export const postTransaccion = async (ctx: Context) => {
 
         const transaccionData = {
             ...validacion.data,
-            usuario_id
+            usuario_id // Solo para verificar que la cuenta pertenece al usuario
         };
 
         const objTransaccion = new Transaccion();
