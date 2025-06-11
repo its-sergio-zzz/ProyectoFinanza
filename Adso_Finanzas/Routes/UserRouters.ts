@@ -1,6 +1,6 @@
 import { Router } from "../Dependencies/Dependencias.ts";
 import { authMiddleware } from "../Middlewares/ValidateJWT.ts";
-import { getUsuarios } from "../Controllers/UserController.ts";
+import { getUsuarios,postUsuario,putUsuario,deleteUsuario } from "../Controllers/UserController.ts";
 
 const UserRouter = new Router();
 
@@ -14,6 +14,9 @@ UserRouter.get("/protected",authMiddleware,(ctx) =>{
         user: ctx.state.user
     };
 });
+UserRouter.post("/users",postUsuario);
+UserRouter.put("/users",putUsuario);
+UserRouter.delete("/users",deleteUsuario);
 
 
 export {UserRouter}
