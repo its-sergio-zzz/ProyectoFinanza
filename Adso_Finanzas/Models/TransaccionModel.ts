@@ -115,7 +115,7 @@ export class Transaccion {
             console.error("Error al crear transacción:", error);
             return {
                 success: false,
-                message: "Error al crear la transacción"
+                message: `Error al crear la transacción${error}`
             };
         }
     }
