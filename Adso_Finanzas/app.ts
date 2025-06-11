@@ -4,13 +4,14 @@ import { TransaccionesRouter } from "./Routes/TransaccionRoutes.ts";
 import { LoginRouter } from "./Routes/LoginRouter.ts";
 import { UserRouter } from "./Routes/UserRouters.ts";
 import { CuentaRouter } from "./Routes/CuentaRouter.ts";
+import { TipoCuentaRouter } from "./Routes/TipoCuentaRouter.ts";
 
 const app = new Application();
 
 app.use(oakCors());
 
 // Registrar todos los routers
-const routers = [LoginRouter, UserRouter, CuentaRouter, TransaccionesRouter, CategoriaRouter];
+const routers = [LoginRouter, UserRouter, TipoCuentaRouter, CuentaRouter, TransaccionesRouter, CategoriaRouter];
 
 routers.forEach((router) => {
     app.use(router.routes());

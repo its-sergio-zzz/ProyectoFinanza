@@ -57,42 +57,9 @@ Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvc2VydmVyX2p3dCIsInN1YiI6MiwiZXhwIjoxNzQ5NjAzOTMxfQ.BtLb23kF7jt9ygu7FAFpJUbTEwbKx5ST6GK6wYEcqgc
 
 {
-    "nombre": "Alcancía Casa",
-    "tipo": "efectivo",
-    "saldo": 50000.00
-}
-
-### 6. CREAR NUEVA CUENTA - BANCARIA
-POST http://localhost:8000/cuenta
-Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvc2VydmVyX2p3dCIsInN1YiI6MiwiZXhwIjoxNzQ5NjAyNzkwfQ.wcYVarGsv4Ek49vT4GVhmacBJwvF3pOxYEi26KlfEgo
-
-{
-    "nombre": "Cuenta Ahorros Banco Caja Social",
-    "tipo": "bancaria",
-    "saldo": 1500000.00
-}
-
-### 7. CREAR NUEVA CUENTA - TARJETA
-POST http://localhost:8000/cuenta
-Content-Type: application/json
-Authorization: Bearer TU_TOKEN_AQUI
-
-{
-    "nombre": "Tarjeta Crédito American Express",
-    "tipo": "tarjeta",
-    "saldo": 2000000.00
-}
-
-### 8. CREAR NUEVA CUENTA - DIGITAL
-POST http://localhost:8000/cuenta
-Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvc2VydmVyX2p3dCIsInN1YiI6MiwiZXhwIjoxNzQ5NjAyNzkwfQ.wcYVarGsv4Ek49vT4GVhmacBJwvF3pOxYEi26KlfEgo
-
-{
-    "nombre": "PayPal Personal",
-    "tipo": "digital",
-    "saldo": 85000.00
+    "nombre": "Tarjeta Crédito Visa",
+    "tipo_cuenta_id": 3,
+    "saldo": 800000.00
 }
 
 ### 9. ACTUALIZAR CUENTA (cambiar nombre y saldo)
@@ -155,21 +122,6 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vb
     "descripcion": "Pago proyecto freelance"
 }
 
-###
-
-### 5. ACTUALIZAR TRANSACCIÓN (reemplazar :id con ID real)
-PUT http://localhost:8000/transacciones/1
-Content-Type: application/json
-Authorization: Bearer YOUR_TOKEN_HERE
-
-{
-    "cuenta_id": 1,
-    "categoria_id": 8,
-    "tipo": "gasto",
-    "monto": 75000.00,
-    "fecha": "2025-06-09",
-    "descripcion": "Transporte taxi (actualizado)"
-}
 
 ###
 
