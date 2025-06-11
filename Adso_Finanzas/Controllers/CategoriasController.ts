@@ -32,8 +32,7 @@ export const postCategoria = async (ctx: any) => {
         const CategoriaData = {
             id: null,
             nombre: body.nombre,
-            tipo: body.tipo,
-            usuario_id: body.usuario_id
+            tipo: body.tipo
         }
 
         const objCategoria = new Categoria(CategoriaData);
@@ -64,8 +63,7 @@ export const putCategoria = async (ctx: any) => {
         const CategoriaData = {
             id: body.id,
             nombre: body.nombre,
-            tipo: body.tipo,
-            usuario_id: body.usuario_id
+            tipo: body.tipo
         }
 
         const objCategoria = new Categoria (CategoriaData, body.id);

@@ -5,7 +5,6 @@ type TipoCategoria = 'ingreso' | 'gasto';
 
 interface CategoriaData {
     id: number | null;
-    usuario_id: number;
     nombre: string;
     tipo: TipoCategoria;
 }
@@ -14,12 +13,11 @@ export class Categoria {
 
     public _objCategoria: CategoriaData | null;
     public _id: number | null;
-    public _usuario_id: number | null;
 
-    constructor(objCategoria: CategoriaData | null = null, id: number | null = null, usuario_id: number | null = null ){
+    constructor(objCategoria: CategoriaData | null = null, id: number | null = null ){
         this._objCategoria = objCategoria;
         this._id = id;
-        this._usuario_id = usuario_id;
+        
     }
 
     public async SeleccionarCategoria():Promise<CategoriaData[]>{
@@ -33,13 +31,13 @@ export class Categoria {
                 throw new Error ("No se ha enviado ninguna categoria");
             }
 
-            const {nombre, tipo, usuario_id} = this._objCategoria;
-            if(!nombre || !tipo || !usuario_id){
+            const {nombre, tipo} = this._objCategoria;
+            if(!nombre || !tipo){
                 throw new Error ("Faltan campos requeridos para insertar la categoria.");
             }
 
             await conexion.execute("START TRANSACTION");
-            const result = await conexion.execute(`INSERT INTO categorias (nombre, tipo, usuario_id) VALUES (?,?,?)`, [nombre,tipo,usuario_id]);
+            const result = await conexion.execute(`INSERT INTO categorias (nombre, tipo) VALUES (?,?)`, [nombre,tipo]);
             if(result && typeof result.affectedRows === "number" && result.affectedRows > 0){
                 const [categorias] = await conexion.query(`SELECT * FROM categorias WHERE id = LAST_INSERT_ID()`,);
                 await conexion.execute("COMMIT");
@@ -62,13 +60,13 @@ export class Categoria {
             if(!this._objCategoria){
                 throw new Error("No se ha enviado ninguna categoria");
             }
-            const { nombre, tipo, usuario_id } = this._objCategoria;
-            if(!nombre || !tipo || !usuario_id){
+            const { nombre, tipo} = this._objCategoria;
+            if(!nombre || !tipo ){
                 throw new Error ("Faltan campos requeridos para actualizar la Categoria");
             }
 
             await conexion.execute("START TRANSACTION");
-            const result = await conexion.execute(`UPDATE categorias SET nombre=?,tipo=?, usuario_id=? WHERE id = ?`, [nombre, tipo, usuario_id, this._id,]);
+            const result = await conexion.execute(`UPDATE categorias SET nombre=?,tipo=? WHERE id = ?`, [nombre, tipo, this._id,]);
             if(result && typeof result.affectedRows === "number" && result.affectedRows > 0){
                 const [categorias] = await conexion.query (`SELECT * FROM categorias WHERE id=?`, [this._id]);
                 await conexion.execute("COMMIT");
