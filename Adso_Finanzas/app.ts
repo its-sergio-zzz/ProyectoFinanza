@@ -4,12 +4,18 @@ import { TransaccionesRouter } from "./Routes/TransaccionRoutes.ts";
 import { LoginRouter } from "./Routes/LoginRouter.ts";
 import { UserRouter } from "./Routes/UserRouters.ts";
 import { CuentaRouter } from "./Routes/CuentaRouter.ts";
+import { TipoCuentaRouter } from "./Routes/TipoCuentaRouter.ts";
+
 import { send } from "https://deno.land/x/oak@v17.1.3/send.ts";
+
 
 const app = new Application();
 
 app.use(oakCors());
 
+
+// Registrar todos los routers
+const routers = [LoginRouter, UserRouter, TipoCuentaRouter, CuentaRouter, TransaccionesRouter, CategoriaRouter];
 app.use(async (ctx, next)=>{
     if(ctx.request.url.pathname.startsWith("/uploads")){
         const filepath = ctx.request.url.pathname.replace("/uploads/","");
@@ -21,7 +27,7 @@ app.use(async (ctx, next)=>{
     }
 });
 
-const routers = [LoginRouter, UserRouter, CuentaRouter, TransaccionesRouter, CategoriaRouter];
+
 
 routers.forEach((router) => {
     app.use(router.routes());

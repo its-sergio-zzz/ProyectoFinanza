@@ -1,11 +1,14 @@
 import { conexion } from "./Conexion.ts";
+import { TipoCuenta } from "./TipoCuentaModel.ts";
 
 interface CuentaData {
     id?: number;
     usuario_id: number;
     nombre: string;
-    tipo: 'efectivo' | 'bancaria' | 'tarjeta' | 'digital';
+    tipo_cuenta_id: number;
     saldo: number;
+    // Campos adicionales para mostrar información del tipo
+    tipo_cuenta_nombre?: string;
 }
 
 interface ResultadoOperacion {
@@ -23,10 +26,22 @@ export class Cuenta {
         this._id = id;
     }
 
-    // Obtener todas las cuentas de un usuario
+    // Obtener todas las cuentas de un usuario con información del tipo
     public async obtenerCuentasPorUsuario(usuario_id: number): Promise<CuentaData[]> {
         try {
-            const query = `SELECT * FROM cuentas WHERE usuario_id = ? ORDER BY nombre`;
+            const query = `
+                SELECT 
+                    c.id,
+                    c.usuario_id,
+                    c.nombre,
+                    c.tipo_cuenta_id,
+                    c.saldo,
+                    tc.nombre as tipo_cuenta_nombre
+                FROM cuentas c
+                INNER JOIN tipo_cuenta tc ON c.tipo_cuenta_id = tc.id
+                WHERE c.usuario_id = ?
+                ORDER BY c.nombre
+            `;
             const rows = await conexion.query(query, [usuario_id]);
             return rows as CuentaData[];
         } catch (error) {
@@ -38,6 +53,17 @@ export class Cuenta {
     // Crear una nueva cuenta
     public async crearCuenta(cuentaData: CuentaData): Promise<ResultadoOperacion> {
         try {
+            // Verificar que el tipo de cuenta existe
+            const objTipoCuenta = new TipoCuenta();
+            const tipoExiste = await objTipoCuenta.existeTipoCuenta(cuentaData.tipo_cuenta_id);
+            
+            if (!tipoExiste) {
+                return {
+                    success: false,
+                    message: "El tipo de cuenta especificado no existe"
+                };
+            }
+
             // Verificar que el usuario no tenga una cuenta con el mismo nombre
             const cuentaExistente = await conexion.query(
                 `SELECT id FROM cuentas WHERE usuario_id = ? AND nombre = ?`,
@@ -52,14 +78,14 @@ export class Cuenta {
             }
 
             const insertQuery = `
-                INSERT INTO cuentas (usuario_id, nombre, tipo, saldo)
+                INSERT INTO cuentas (usuario_id, nombre, tipo_cuenta_id, saldo)
                 VALUES (?, ?, ?, ?)
             `;
             
             const result = await conexion.query(insertQuery, [
                 cuentaData.usuario_id,
                 cuentaData.nombre,
-                cuentaData.tipo,
+                cuentaData.tipo_cuenta_id,
                 cuentaData.saldo || 0
             ]);
             
@@ -93,6 +119,19 @@ export class Cuenta {
                 };
             }
 
+            // Si se está cambiando el tipo, verificar que existe
+            if (cuentaData.tipo_cuenta_id) {
+                const objTipoCuenta = new TipoCuenta();
+                const tipoExiste = await objTipoCuenta.existeTipoCuenta(cuentaData.tipo_cuenta_id);
+                
+                if (!tipoExiste) {
+                    return {
+                        success: false,
+                        message: "El tipo de cuenta especificado no existe"
+                    };
+                }
+            }
+
             // Si se está cambiando el nombre, verificar que no exista otra cuenta con ese nombre
             if (cuentaData.nombre) {
                 const nombreDuplicado = await conexion.query(
@@ -116,9 +155,9 @@ export class Cuenta {
                 valores.push(cuentaData.nombre);
             }
 
-            if (cuentaData.tipo !== undefined) {
-                campos.push('tipo = ?');
-                valores.push(cuentaData.tipo);
+            if (cuentaData.tipo_cuenta_id !== undefined) {
+                campos.push('tipo_cuenta_id = ?');
+                valores.push(cuentaData.tipo_cuenta_id);
             }
 
             if (cuentaData.saldo !== undefined) {
@@ -196,10 +235,21 @@ export class Cuenta {
         }
     }
 
-    // Obtener una cuenta específica por ID y usuario
+    // Obtener una cuenta específica por ID y usuario con información del tipo
     public async obtenerCuentaPorId(id: number, usuario_id: number): Promise<CuentaData | null> {
         try {
-            const query = `SELECT * FROM cuentas WHERE id = ? AND usuario_id = ?`;
+            const query = `
+                SELECT 
+                    c.id,
+                    c.usuario_id,
+                    c.nombre,
+                    c.tipo_cuenta_id,
+                    c.saldo,
+                    tc.nombre as tipo_cuenta_nombre
+                FROM cuentas c
+                INNER JOIN tipo_cuenta tc ON c.tipo_cuenta_id = tc.id
+                WHERE c.id = ? AND c.usuario_id = ?
+            `;
             const result = await conexion.query(query, [id, usuario_id]);
             
             if (result && result.length > 0) {
@@ -237,7 +287,7 @@ export class Cuenta {
     public async obtenerResumenFinanciero(usuario_id: number): Promise<{
         total_cuentas: number;
         saldo_total: number;
-        cuentas_por_tipo: Array<{tipo: string, cantidad: number, saldo_total: number}>;
+        cuentas_por_tipo: Array<{tipo_nombre: string, cantidad: number, saldo_total: number}>;
     }> {
         try {
             // Total de cuentas y saldo
@@ -252,19 +302,20 @@ export class Cuenta {
             // Resumen por tipo de cuenta
             const resumenPorTipo = await conexion.query(`
                 SELECT 
-                    tipo,
+                    tc.nombre as tipo_nombre,
                     COUNT(*) as cantidad,
-                    COALESCE(SUM(saldo), 0) as saldo_total
-                FROM cuentas 
-                WHERE usuario_id = ?
-                GROUP BY tipo
+                    COALESCE(SUM(c.saldo), 0) as saldo_total
+                FROM cuentas c
+                INNER JOIN tipo_cuenta tc ON c.tipo_cuenta_id = tc.id
+                WHERE c.usuario_id = ?
+                GROUP BY tc.id, tc.nombre
                 ORDER BY saldo_total DESC
             `, [usuario_id]);
 
             return {
                 total_cuentas: resumenGeneral[0]?.total_cuentas || 0,
                 saldo_total: resumenGeneral[0]?.saldo_total || 0,
-                cuentas_por_tipo: resumenPorTipo as Array<{tipo: string, cantidad: number, saldo_total: number}>
+                cuentas_por_tipo: resumenPorTipo as Array<{tipo_nombre: string, cantidad: number, saldo_total: number}>
             };
         } catch (error) {
             console.error("Error al obtener resumen financiero:", error);

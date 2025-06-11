@@ -7,18 +7,16 @@ interface ContextWithParams extends Context {
     params: { [key: string]: string };
 }
 
-// Esquemas de validación con Zod
+// Esquemas de validación con Zod actualizados
 const cuentaSchema = z.object({
     nombre: z.string().min(2, "El nombre debe tener al menos 2 caracteres").max(100, "El nombre no puede tener más de 100 caracteres"),
-    tipo: z.enum(['efectivo', 'bancaria', 'tarjeta', 'digital'], {
-        errorMap: () => ({ message: "El tipo debe ser: efectivo, bancaria, tarjeta o digital" })
-    }),
+    tipo_cuenta_id: z.number().positive("El tipo de cuenta es requerido"),
     saldo: z.number().min(0, "El saldo no puede ser negativo").optional().default(0)
 });
 
 const cuentaUpdateSchema = z.object({
     nombre: z.string().min(2, "El nombre debe tener al menos 2 caracteres").max(100, "El nombre no puede tener más de 100 caracteres").optional(),
-    tipo: z.enum(['efectivo', 'bancaria', 'tarjeta', 'digital']).optional(),
+    tipo_cuenta_id: z.number().positive("El tipo de cuenta es requerido").optional(),
     saldo: z.number().min(0, "El saldo no puede ser negativo").optional()
 });
 
