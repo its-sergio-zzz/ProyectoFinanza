@@ -88,18 +88,18 @@ Authorization: Bearer TU_TOKEN_AQUI
 
 ### 2. OBTENER TODAS LAS TRANSACCIONES (requiere token)
 GET http://localhost:8000/transacciones
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvc2VydmVyX2p3dCIsInN1YiI6MSwiZXhwIjoxNzQ5NTY0NzM0fQ.zf19Ry3gnyBQ2ggOpOd-WI3pdFTp0LeuxfXvf0YX5WA
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvc2VydmVyX2p3dCIsInN1YiI6MSwiZXhwIjoxNzQ5NTcyMTM0fQ.YPR62QuvQvsj5XLUcU6EVixj4KPZs91U95-i3MsN9cs
 
 ###
 
 ### 3. CREAR NUEVA TRANSACCIÓN
 POST http://localhost:8000/transacciones
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvc2VydmVyX2p3dCIsInN1YiI6MSwiZXhwIjoxNzQ5NTY0NzM0fQ.zf19Ry3gnyBQ2ggOpOd-WI3pdFTp0LeuxfXvf0YX5WA
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvc2VydmVyX2p3dCIsInN1YiI6MSwiZXhwIjoxNzQ5NTcyMTM0fQ.YPR62QuvQvsj5XLUcU6EVixj4KPZs91U95-i3MsN9cs
 
 {
     "cuenta_id": 1,
-    "categoria_id": 7,
+    "categoria_id": 1,
     "tipo": "gasto",
     "monto": 50000.00,
     "fecha": "2025-06-09",
