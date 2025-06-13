@@ -29,6 +29,6 @@ TransaccionesRouter.get("/transacciones/filtrar", getTransaccionesFiltradas);
 TransaccionesRouter.get("/cuentas", getCuentas);
 TransaccionesRouter.get("/categorias", getCategorias);
 
-TransaccionesRouter.get("/resumen", obtenerResumen)
+TransaccionesRouter.get("/resumen", obtenerResumen);
 
 export { TransaccionesRouter };

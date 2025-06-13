@@ -208,3 +208,6 @@ Content-Type: application/json
 GET http://localhost:8000/users
 Content-Type: "application/json"
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvc2VydmVyX2p3dCIsInN1YiI6MSwiZXhwIjoxNzQ5NTY0NzM0fQ.zf19Ry3gnyBQ2ggOpOd-WI3pdFTp0LeuxfXvf0YX5WA
+###
+GET http://localhost:8000/resumen?usuario_id=1&periodo=mensual
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvc2VydmVyX2p3dCIsInN1YiI6MSwiZXhwIjoxNzQ5ODMzNDY0fQ.S9QQvVXyy1T2kGODgck97D_lLh9jxWwi4w3-_nsSGT8
