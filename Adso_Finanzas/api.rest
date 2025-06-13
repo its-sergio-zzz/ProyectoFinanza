@@ -1,13 +1,14 @@
 
 GET http://localhost:8000/categorias
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvc2VydmVyX2p3dCIsInN1YiI6MiwiZXhwIjoxNzQ5ODM1MzI2fQ.xcD_kYQzrPxVn5H6smgQcd3dXwIXLsEct-mZrjpZyiY
 ###
 
 POST http://localhost:8000/categorias
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvc2VydmVyX2p3dCIsInN1YiI6MiwiZXhwIjoxNzQ5NjQ5ODQyfQ.eZ9WV3sfxKJllrOaaKeNUkJN-V0rtDUByGkNuClmZaw
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvc2VydmVyX2p3dCIsInN1YiI6MiwiZXhwIjoxNzQ5ODI1MDg3fQ.hC_l1Bk8uQqTKVGLQdjFjsyJfiomzKTsT1tR3X38ZG0
 
 {
-    "nombre": "Transporte",
+    "nombre": "tetas",
     "tipo": "gasto"
 }
 
@@ -16,10 +17,11 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vb
 
 PUT http://localhost:8000/categorias
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvc2VydmVyX2p3dCIsInN1YiI6MiwiZXhwIjoxNzQ5ODI1MDg3fQ.hC_l1Bk8uQqTKVGLQdjFjsyJfiomzKTsT1tR3X38ZG0
 
 {
-    "id": 3,
-    "nombre": "Alimentación",
+    "idCategoria": 13,
+    "nombre": "hola",
     "tipo": "ingreso"
 }
 
@@ -27,9 +29,10 @@ Content-Type: application/json
 
 DELETE http://localhost:8000/categorias
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvc2VydmVyX2p3dCIsInN1YiI6MiwiZXhwIjoxNzQ5ODI0NTQxfQ.da5nZKsbY1Kj87ftR8zMDqT9EybN-3SS7wvHF55MFu8
 
 {
-    "id": 2
+    "idCategoria": 13
 }
 
 =======

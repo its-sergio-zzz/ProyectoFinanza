@@ -17,13 +17,13 @@ interface CuentaData {
     id: number;
     usuario_id: number;
     nombre: string;
-    tipo: string;
+    tipo_cuenta_id: number;
     saldo: number;
+    tipo_cuenta_nombre?: string;
 }
 
 interface CategoriaData {
-    id: number;
-    usuario_id: number;
+    idCategoria: number;
     nombre: string;
     tipo: 'ingreso' | 'gasto';
 }
@@ -53,69 +53,118 @@ export class Transaccion {
 
     // Obtener todas las transacciones de un usuario
     public async obtenerTransaccionesPorUsuario(usuario_id: number): Promise<TransaccionData[]> {
-        const query = `
-            SELECT 
-                t.id,
-                t.usuario_id,
-                t.cuenta_id,
-                c.nombre as cuenta_nombre,
-                t.categoria_id,
-                cat.nombre as categoria_nombre,
-                t.tipo,
-                t.monto,
-                t.fecha,
-                t.descripcion
-            FROM transacciones t
-            INNER JOIN cuentas c ON t.cuenta_id = c.id
-            INNER JOIN categorias cat ON t.categoria_id = cat.id
-            WHERE t.usuario_id = ?
-            ORDER BY t.fecha DESC, t.id DESC
-        `;
-        
-        const rows = await conexion.query(query, [usuario_id]);
-        return rows as TransaccionData[];
+        try {
+            const query = `
+                SELECT 
+                    t.id,
+                    t.cuenta_id,
+                    c.nombre as cuenta_nombre,
+                    t.categoria_id,
+                    cat.nombre as categoria_nombre,
+                    t.tipo,
+                    t.monto,
+                    t.fecha,
+                    t.descripcion
+                FROM transacciones t
+                INNER JOIN cuentas c ON t.cuenta_id = c.id
+                INNER JOIN categorias cat ON t.categoria_id = cat.idCategoria
+                WHERE c.usuario_id = ?
+                ORDER BY t.fecha DESC, t.id DESC
+            `;
+            
+            const rows = await conexion.query(query, [usuario_id]);
+            return rows as TransaccionData[];
+        } catch (error) {
+            console.error("Error al obtener transacciones:", error);
+            return [];
+        }
     }
 
     // Crear una nueva transacción
     public async crearTransaccion(transaccionData: TransaccionData): Promise<ResultadoOperacion> {
         try {
-            // Insertar la transacción
-            const insertQuery = `
-                INSERT INTO transacciones (usuario_id, cuenta_id, categoria_id, tipo, monto, fecha, descripcion)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            `;
-            
-            const result = await conexion.query(insertQuery, [
-                transaccionData.usuario_id,
-                transaccionData.cuenta_id,
-                transaccionData.categoria_id,
-                transaccionData.tipo,
-                transaccionData.monto,
-                transaccionData.fecha,
-                transaccionData.descripcion || null
-            ]);
+            // Verificar que la cuenta pertenece al usuario
+            const cuentaExiste = await conexion.query(
+                `SELECT id, saldo FROM cuentas WHERE id = ? AND usuario_id = ?`,
+                [transaccionData.cuenta_id, transaccionData.usuario_id]
+            );
 
-            // Actualizar el saldo de la cuenta
-            const updateSaldoQuery = transaccionData.tipo === 'ingreso' 
-                ? `UPDATE cuentas SET saldo = saldo + ? WHERE id = ? AND usuario_id = ?`
-                : `UPDATE cuentas SET saldo = saldo - ? WHERE id = ? AND usuario_id = ?`;
-            
-            await conexion.query(updateSaldoQuery, [
-                transaccionData.monto,
-                transaccionData.cuenta_id,
-                transaccionData.usuario_id
-            ]);
-            
-            return {
-                success: true,
-                message: "Transacción creada exitosamente",
-                id: result.lastInsertId as number
-            };
+            if (!cuentaExiste || cuentaExiste.length === 0) {
+                return {
+                    success: false,
+                    message: "La cuenta no existe o no pertenece al usuario"
+                };
+            }
+
+            // Verificar que la categoría existe y es del tipo correcto
+            const categoriaExiste = await conexion.query(
+                `SELECT idCategoria FROM categorias WHERE idCategoria = ? AND tipo = ?`,
+                [transaccionData.categoria_id, transaccionData.tipo]
+            );
+
+            if (!categoriaExiste || categoriaExiste.length === 0) {
+                return {
+                    success: false,
+                    message: "La categoría no existe o no corresponde al tipo de transacción"
+                };
+            }
+
+            // Verificar saldo suficiente para gastos
+            if (transaccionData.tipo === 'gasto') {
+                const saldoActual = cuentaExiste[0].saldo;
+                if (saldoActual < transaccionData.monto) {
+                    return {
+                        success: false,
+                        message: "Saldo insuficiente en la cuenta"
+                    };
+                }
+            }
+
+            // Iniciar transacción
+            await conexion.execute("START TRANSACTION");
+
+            try {
+                // Insertar la transacción
+                const insertQuery = `
+                    INSERT INTO transacciones (cuenta_id, categoria_id, tipo, monto, fecha, descripcion)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                `;
+                
+                const result = await conexion.execute(insertQuery, [
+                    transaccionData.cuenta_id,
+                    transaccionData.categoria_id,
+                    transaccionData.tipo,
+                    transaccionData.monto,
+                    transaccionData.fecha,
+                    transaccionData.descripcion || null
+                ]);
+
+                // Actualizar el saldo de la cuenta
+                const updateSaldoQuery = transaccionData.tipo === 'ingreso' 
+                    ? `UPDATE cuentas SET saldo = saldo + ? WHERE id = ?`
+                    : `UPDATE cuentas SET saldo = saldo - ? WHERE id = ?`;
+                
+                await conexion.execute(updateSaldoQuery, [
+                    transaccionData.monto,
+                    transaccionData.cuenta_id
+                ]);
+
+                await conexion.execute("COMMIT");
+                
+                return {
+                    success: true,
+                    message: "Transacción creada exitosamente",
+                    id: result.lastInsertId as number
+                };
+            } catch (error) {
+                await conexion.execute("ROLLBACK");
+                throw error;
+            }
         } catch (error) {
             console.error("Error al crear transacción:", error);
             return {
                 success: false,
-                message: `Error al crear la transacción${error}`
+                message: "Error al crear la transacción"
             };
         }
     }
@@ -124,7 +173,12 @@ export class Transaccion {
     public async actualizarTransaccion(id: number, transaccionData: TransaccionData): Promise<ResultadoOperacion> {
         try {
             // Obtener la transacción anterior para revertir el saldo
-            const selectQuery = `SELECT * FROM transacciones WHERE id = ? AND usuario_id = ?`;
+            const selectQuery = `
+                SELECT t.*, c.usuario_id 
+                FROM transacciones t
+                INNER JOIN cuentas c ON t.cuenta_id = c.id
+                WHERE t.id = ? AND c.usuario_id = ?
+            `;
             const transaccionAnterior = await conexion.query(selectQuery, [id, transaccionData.usuario_id]);
             
             if (!transaccionAnterior || transaccionAnterior.length === 0) {
@@ -136,50 +190,99 @@ export class Transaccion {
 
             const transaccionVieja = transaccionAnterior[0] as TransaccionData;
 
-            // Revertir el saldo de la cuenta (transacción anterior)
-            const revertSaldoQuery = transaccionVieja.tipo === 'ingreso' 
-                ? `UPDATE cuentas SET saldo = saldo - ? WHERE id = ? AND usuario_id = ?`
-                : `UPDATE cuentas SET saldo = saldo + ? WHERE id = ? AND usuario_id = ?`;
-            
-            await conexion.query(revertSaldoQuery, [
-                transaccionVieja.monto,
-                transaccionVieja.cuenta_id,
-                transaccionData.usuario_id
-            ]);
+            // Verificar que la nueva cuenta pertenece al usuario
+            const cuentaExiste = await conexion.query(
+                `SELECT id, saldo FROM cuentas WHERE id = ? AND usuario_id = ?`,
+                [transaccionData.cuenta_id, transaccionData.usuario_id]
+            );
 
-            // Actualizar la transacción
-            const updateQuery = `
-                UPDATE transacciones 
-                SET cuenta_id = ?, categoria_id = ?, tipo = ?, monto = ?, fecha = ?, descripcion = ?
-                WHERE id = ? AND usuario_id = ?
-            `;
-            
-            await conexion.query(updateQuery, [
-                transaccionData.cuenta_id,
-                transaccionData.categoria_id,
-                transaccionData.tipo,
-                transaccionData.monto,
-                transaccionData.fecha,
-                transaccionData.descripcion || null,
-                id,
-                transaccionData.usuario_id
-            ]);
+            if (!cuentaExiste || cuentaExiste.length === 0) {
+                return {
+                    success: false,
+                    message: "La cuenta no existe o no pertenece al usuario"
+                };
+            }
 
-            // Aplicar el nuevo saldo
-            const updateSaldoQuery = transaccionData.tipo === 'ingreso' 
-                ? `UPDATE cuentas SET saldo = saldo + ? WHERE id = ? AND usuario_id = ?`
-                : `UPDATE cuentas SET saldo = saldo - ? WHERE id = ? AND usuario_id = ?`;
-            
-            await conexion.query(updateSaldoQuery, [
-                transaccionData.monto,
-                transaccionData.cuenta_id,
-                transaccionData.usuario_id
-            ]);
-            
-            return {
-                success: true,
-                message: "Transacción actualizada exitosamente"
-            };
+            // Verificar que la categoría existe y es del tipo correcto
+            const categoriaExiste = await conexion.query(
+                `SELECT idCategoria FROM categorias WHERE idCategoria = ? AND tipo = ?`,
+                [transaccionData.categoria_id, transaccionData.tipo]
+            );
+
+            if (!categoriaExiste || categoriaExiste.length === 0) {
+                return {
+                    success: false,
+                    message: "La categoría no existe o no corresponde al tipo de transacción"
+                };
+            }
+
+            // Iniciar transacción
+            await conexion.execute("START TRANSACTION");
+
+            try {
+                // Revertir el saldo de la cuenta anterior
+                const revertSaldoQuery = transaccionVieja.tipo === 'ingreso' 
+                    ? `UPDATE cuentas SET saldo = saldo - ? WHERE id = ?`
+                    : `UPDATE cuentas SET saldo = saldo + ? WHERE id = ?`;
+                
+                await conexion.execute(revertSaldoQuery, [
+                    transaccionVieja.monto,
+                    transaccionVieja.cuenta_id
+                ]);
+
+                // Verificar saldo suficiente para gastos en la nueva cuenta
+                if (transaccionData.tipo === 'gasto') {
+                    const cuentaActualizada = await conexion.query(
+                        `SELECT saldo FROM cuentas WHERE id = ?`,
+                        [transaccionData.cuenta_id]
+                    );
+                    
+                    if (cuentaActualizada[0].saldo < transaccionData.monto) {
+                        await conexion.execute("ROLLBACK");
+                        return {
+                            success: false,
+                            message: "Saldo insuficiente en la cuenta"
+                        };
+                    }
+                }
+
+                // Actualizar la transacción
+                const updateQuery = `
+                    UPDATE transacciones 
+                    SET cuenta_id = ?, categoria_id = ?, tipo = ?, monto = ?, fecha = ?, descripcion = ?
+                    WHERE id = ?
+                `;
+                
+                await conexion.execute(updateQuery, [
+                    transaccionData.cuenta_id,
+                    transaccionData.categoria_id,
+                    transaccionData.tipo,
+                    transaccionData.monto,
+                    transaccionData.fecha,
+                    transaccionData.descripcion || null,
+                    id
+                ]);
+
+                // Aplicar el nuevo saldo
+                const updateSaldoQuery = transaccionData.tipo === 'ingreso' 
+                    ? `UPDATE cuentas SET saldo = saldo + ? WHERE id = ?`
+                    : `UPDATE cuentas SET saldo = saldo - ? WHERE id = ?`;
+                
+                await conexion.execute(updateSaldoQuery, [
+                    transaccionData.monto,
+                    transaccionData.cuenta_id
+                ]);
+
+                await conexion.execute("COMMIT");
+                
+                return {
+                    success: true,
+                    message: "Transacción actualizada exitosamente"
+                };
+            } catch (error) {
+                await conexion.execute("ROLLBACK");
+                throw error;
+            }
         } catch (error) {
             console.error("Error al actualizar transacción:", error);
             return {
@@ -193,7 +296,12 @@ export class Transaccion {
     public async eliminarTransaccion(id: number, usuario_id: number): Promise<ResultadoOperacion> {
         try {
             // Obtener la transacción para revertir el saldo
-            const selectQuery = `SELECT * FROM transacciones WHERE id = ? AND usuario_id = ?`;
+            const selectQuery = `
+                SELECT t.*, c.usuario_id 
+                FROM transacciones t
+                INNER JOIN cuentas c ON t.cuenta_id = c.id
+                WHERE t.id = ? AND c.usuario_id = ?
+            `;
             const transaccion = await conexion.query(selectQuery, [id, usuario_id]);
             
             if (!transaccion || transaccion.length === 0) {
@@ -205,25 +313,34 @@ export class Transaccion {
 
             const transaccionData = transaccion[0] as TransaccionData;
 
-            // Revertir el saldo de la cuenta
-            const revertSaldoQuery = transaccionData.tipo === 'ingreso' 
-                ? `UPDATE cuentas SET saldo = saldo - ? WHERE id = ? AND usuario_id = ?`
-                : `UPDATE cuentas SET saldo = saldo + ? WHERE id = ? AND usuario_id = ?`;
-            
-            await conexion.query(revertSaldoQuery, [
-                transaccionData.monto,
-                transaccionData.cuenta_id,
-                usuario_id
-            ]);
+            // Iniciar transacción
+            await conexion.execute("START TRANSACTION");
 
-            // Eliminar la transacción
-            const deleteQuery = `DELETE FROM transacciones WHERE id = ? AND usuario_id = ?`;
-            await conexion.query(deleteQuery, [id, usuario_id]);
-            
-            return {
-                success: true,
-                message: "Transacción eliminada exitosamente"
-            };
+            try {
+                // Revertir el saldo de la cuenta
+                const revertSaldoQuery = transaccionData.tipo === 'ingreso' 
+                    ? `UPDATE cuentas SET saldo = saldo - ? WHERE id = ?`
+                    : `UPDATE cuentas SET saldo = saldo + ? WHERE id = ?`;
+                
+                await conexion.execute(revertSaldoQuery, [
+                    transaccionData.monto,
+                    transaccionData.cuenta_id
+                ]);
+
+                // Eliminar la transacción
+                const deleteQuery = `DELETE FROM transacciones WHERE id = ?`;
+                await conexion.execute(deleteQuery, [id]);
+
+                await conexion.execute("COMMIT");
+                
+                return {
+                    success: true,
+                    message: "Transacción eliminada exitosamente"
+                };
+            } catch (error) {
+                await conexion.execute("ROLLBACK");
+                throw error;
+            }
         } catch (error) {
             console.error("Error al eliminar transacción:", error);
             return {
@@ -235,25 +352,47 @@ export class Transaccion {
 
     // Obtener cuentas de un usuario
     public async obtenerCuentasPorUsuario(usuario_id: number): Promise<CuentaData[]> {
-        const query = `SELECT * FROM cuentas WHERE usuario_id = ? ORDER BY nombre`;
-        const rows = await conexion.query(query, [usuario_id]);
-        return rows as CuentaData[];
+        try {
+            const query = `
+                SELECT 
+                    c.id,
+                    c.usuario_id,
+                    c.nombre,
+                    c.tipo_cuenta_id,
+                    c.saldo,
+                    tc.nombre as tipo_cuenta_nombre
+                FROM cuentas c
+                INNER JOIN tipo_cuenta tc ON c.tipo_cuenta_id = tc.id
+                WHERE c.usuario_id = ? 
+                ORDER BY c.nombre
+            `;
+            const rows = await conexion.query(query, [usuario_id]);
+            return rows as CuentaData[];
+        } catch (error) {
+            console.error("Error al obtener cuentas:", error);
+            return [];
+        }
     }
 
-    // Obtener categorías de un usuario
+    // Obtener categorías
     public async obtenerCategoriasPorUsuario(usuario_id: number, tipo?: 'ingreso' | 'gasto'): Promise<CategoriaData[]> {
-        let query = `SELECT * FROM categorias WHERE usuario_id = ?`;
-        const params: (number | string)[] = [usuario_id];
-        
-        if (tipo) {
-            query += ` AND tipo = ?`;
-            params.push(tipo);
+        try {
+            let query = `SELECT idCategoria, nombre, tipo FROM categorias`;
+            const params: string[] = [];
+            
+            if (tipo) {
+                query += ` WHERE tipo = ?`;
+                params.push(tipo);
+            }
+            
+            query += ` ORDER BY nombre`;
+            
+            const rows = await conexion.query(query, params);
+            return rows as CategoriaData[];
+        } catch (error) {
+            console.error("Error al obtener categorías:", error);
+            return [];
         }
-        
-        query += ` ORDER BY nombre`;
-        
-        const rows = await conexion.query(query, params);
-        return rows as CategoriaData[];
     }
 
     // Obtener transacciones filtradas
@@ -261,54 +400,58 @@ export class Transaccion {
         usuario_id: number, 
         filtros: FiltrosTransaccion
     ): Promise<TransaccionData[]> {
-        let query = `
-            SELECT 
-                t.id,
-                t.usuario_id,
-                t.cuenta_id,
-                c.nombre as cuenta_nombre,
-                t.categoria_id,
-                cat.nombre as categoria_nombre,
-                t.tipo,
-                t.monto,
-                t.fecha,
-                t.descripcion
-            FROM transacciones t
-            INNER JOIN cuentas c ON t.cuenta_id = c.id
-            INNER JOIN categorias cat ON t.categoria_id = cat.id
-            WHERE t.usuario_id = ?
-        `;
-        
-        const params: (number | string)[] = [usuario_id];
+        try {
+            let query = `
+                SELECT 
+                    t.id,
+                    t.cuenta_id,
+                    c.nombre as cuenta_nombre,
+                    t.categoria_id,
+                    cat.nombre as categoria_nombre,
+                    t.tipo,
+                    t.monto,
+                    t.fecha,
+                    t.descripcion
+                FROM transacciones t
+                INNER JOIN cuentas c ON t.cuenta_id = c.id
+                INNER JOIN categorias cat ON t.categoria_id = cat.idCategoria
+                WHERE c.usuario_id = ?
+            `;
+            
+            const params: (number | string)[] = [usuario_id];
 
-        if (filtros.fecha_inicio) {
-            query += ` AND t.fecha >= ?`;
-            params.push(filtros.fecha_inicio);
+            if (filtros.fecha_inicio) {
+                query += ` AND t.fecha >= ?`;
+                params.push(filtros.fecha_inicio);
+            }
+
+            if (filtros.fecha_fin) {
+                query += ` AND t.fecha <= ?`;
+                params.push(filtros.fecha_fin);
+            }
+
+            if (filtros.categoria_id) {
+                query += ` AND t.categoria_id = ?`;
+                params.push(filtros.categoria_id);
+            }
+
+            if (filtros.tipo) {
+                query += ` AND t.tipo = ?`;
+                params.push(filtros.tipo);
+            }
+
+            if (filtros.cuenta_id) {
+                query += ` AND t.cuenta_id = ?`;
+                params.push(filtros.cuenta_id);
+            }
+
+            query += ` ORDER BY t.fecha DESC, t.id DESC`;
+            
+            const rows = await conexion.query(query, params);
+            return rows as TransaccionData[];
+        } catch (error) {
+            console.error("Error al obtener transacciones filtradas:", error);
+            return [];
         }
-
-        if (filtros.fecha_fin) {
-            query += ` AND t.fecha <= ?`;
-            params.push(filtros.fecha_fin);
-        }
-
-        if (filtros.categoria_id) {
-            query += ` AND t.categoria_id = ?`;
-            params.push(filtros.categoria_id);
-        }
-
-        if (filtros.tipo) {
-            query += ` AND t.tipo = ?`;
-            params.push(filtros.tipo);
-        }
-
-        if (filtros.cuenta_id) {
-            query += ` AND t.cuenta_id = ?`;
-            params.push(filtros.cuenta_id);
-        }
-
-        query += ` ORDER BY t.fecha DESC, t.id DESC`;
-        
-        const rows = await conexion.query(query, params);
-        return rows as TransaccionData[];
     }
 }
