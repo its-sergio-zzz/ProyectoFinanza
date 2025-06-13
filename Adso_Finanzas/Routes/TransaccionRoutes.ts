@@ -7,7 +7,8 @@ import {
     deleteTransaccion,
     getCuentas,
     getCategorias,
-    getTransaccionesFiltradas
+    getTransaccionesFiltradas,
+    obtenerResumen
 } from "../Controllers/TransaccionController.ts";
 
 const TransaccionesRouter = new Router();
@@ -27,5 +28,7 @@ TransaccionesRouter.get("/transacciones/filtrar", getTransaccionesFiltradas);
 // Rutas auxiliares para obtener datos necesarios
 TransaccionesRouter.get("/cuentas", getCuentas);
 TransaccionesRouter.get("/categorias", getCategorias);
+
+TransaccionesRouter.get("/resumen", obtenerResumen)
 
 export { TransaccionesRouter };
