@@ -9,6 +9,7 @@ export const CrearToken = async (userId: string): Promise<string> => {
         const payload = {
             iss: server,
             sub: userId,
+            usuario_id: userId, // 👈 Agregamos esto
             exp: getNumericDate(60 * 60), // 1 hora
         };
 
@@ -19,6 +20,7 @@ export const CrearToken = async (userId: string): Promise<string> => {
         throw new Error("Error al crear el token JWT");
     }
 };
+
 
 interface TokenPayload {
     iss: string;

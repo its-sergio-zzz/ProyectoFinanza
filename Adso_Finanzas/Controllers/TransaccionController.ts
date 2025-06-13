@@ -296,3 +296,26 @@ export const getTransaccionesFiltradas = async (ctx: Context) => {
         };
     }
 };
+
+export const obtenerResumen = async (ctx: Context) => {
+    try {
+        const url = ctx.request.url;
+        const usuario_id = Number(url.searchParams.get("usuario_id"));
+        const periodo = url.searchParams.get("periodo") as "mensual" | "semanal" | null;
+
+        if (!usuario_id) {
+            ctx.response.status = 400;
+            ctx.response.body = { success: false, message: "Falta usuario_id" };
+            return;
+        }
+
+        const transaccion = new Transaccion();
+        const resumen = await transaccion.obtenerResumen(usuario_id, periodo);
+
+        ctx.response.body = resumen;
+    } catch (error) {
+        console.error("Error en obtenerResumen:", error);
+        ctx.response.status = 500;
+        ctx.response.body = { success: false, message: "Error del servidor" };
+    }
+};
