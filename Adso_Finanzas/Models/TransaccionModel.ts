@@ -313,26 +313,26 @@ export class Transaccion {
     }
 
     public async obtenerResumen(usuario_id: number, periodo: "mensual" | "semanal" | null = null) {
-    const query = `
-        SELECT 
-            ${periodo === "semanal" 
-                ? `YEARWEEK(t.fecha, 1) AS periodo`
-                : periodo === "mensual"
-                    ? `DATE_FORMAT(t.fecha, '%Y-%m') AS periodo`
-                    : `NULL AS periodo`
-            },
-            cat.nombre AS categoria,
-            t.tipo,
-            SUM(t.monto) AS total
-        FROM transacciones t
-        JOIN categorias cat ON t.categoria_id = cat.id
-        WHERE t.usuario_id = ?
-        GROUP BY periodo, categoria, t.tipo
-        ORDER BY periodo DESC;
-    `;
+  const query = `
+    SELECT 
+        ${periodo === "semanal"
+          ? `YEARWEEK(t.fecha, 1) AS periodo`
+          : periodo === "mensual"
+            ? `DATE_FORMAT(t.fecha, '%Y-%m') AS periodo`
+            : `NULL AS periodo`
+        },
+        cat.nombre AS categoria,
+        t.tipo,
+        SUM(t.monto) AS total
+    FROM adso_finanzas.transacciones t
+    JOIN adso_finanzas.categorias cat ON t.categoria_id = cat.id
+    JOIN adso_finanzas.cuentas c ON t.cuenta_id = c.id
+    WHERE c.usuario_id = ?
+    GROUP BY periodo, categoria, t.tipo
+    ORDER BY periodo DESC;
+  `;
 
-    const rows = await conexion.query(query, [usuario_id]);
-    return rows;
+  const rows = await conexion.query(query, [usuario_id]);
+  return rows;
 }
-
-}
+};

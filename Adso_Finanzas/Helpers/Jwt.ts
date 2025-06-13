@@ -4,21 +4,15 @@ import { generarKey } from "./CriptoKey.ts";
 const key = Deno.env.get("MY_SECRET_KEY") || "ADSOJWTSERVER";
 const server = Deno.env.get("SERVER") || "http://localhost:8000/server_jwt";
 
-export const CrearToken = async (userId: string): Promise<string> => {
-    try {
-        const payload = {
-            iss: server,
-            sub: userId,
-            usuario_id: userId, // 👈 Agregamos esto
-            exp: getNumericDate(60 * 60), // 1 hora
-        };
+export const CrearToken = async (userId: number): Promise<string> => {
+    const payload = {
+        iss: server,
+        sub: userId, // ✅ ya es number
+        exp: getNumericDate(60 * 60),
+    };
 
-        const secretKey = await generarKey(key);
-        return await create({ alg: "HS256", typ: "JWT" }, payload, secretKey);
-    } catch (error) {
-        console.error("Error al crear el token:", error);
-        throw new Error("Error al crear el token JWT");
-    }
+    const secretKey = await generarKey(key);
+    return await create({ alg: "HS256", typ: "JWT" }, payload, secretKey);
 };
 
 
